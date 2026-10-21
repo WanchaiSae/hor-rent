@@ -1,0 +1,296 @@
+<mxfile host="app.diagrams.net" modified="2026-10-19T07:52:00.000Z" agent="Grok" version="22.1.0" etag="dorm-er" type="device">
+  <diagram id="dormitory-er" name="Dormitory Management ER Diagram">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ==================== dormitories ==================== -->
+        <mxCell id="dorm" value="dormitories" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="220" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="dorm_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="dorm">
+          <mxGeometry y="30" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="dorm_1" value="code VARCHAR(20) UNIQUE" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="dorm">
+          <mxGeometry y="56" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="dorm_2" value="name VARCHAR(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="dorm">
+          <mxGeometry y="82" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="dorm_3" value="address TEXT" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="dorm">
+          <mxGeometry y="108" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="dorm_4" value="province VARCHAR(50)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="dorm">
+          <mxGeometry y="134" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="dorm_5" value="is_active BOOLEAN" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="dorm">
+          <mxGeometry y="160" width="220" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== rooms ==================== -->
+        <mxCell id="rooms" value="rooms" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="40" width="240" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="rooms">
+          <mxGeometry y="30" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_fk" value="FK  dormitory_id → dormitories" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="rooms">
+          <mxGeometry y="56" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_1" value="room_number VARCHAR(20)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="rooms">
+          <mxGeometry y="82" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_2" value="floor SMALLINT" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="rooms">
+          <mxGeometry y="108" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_3" value="room_type VARCHAR(50)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="rooms">
+          <mxGeometry y="134" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_4" value="capacity SMALLINT" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="rooms">
+          <mxGeometry y="160" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_5" value="monthly_rent DECIMAL(12,2)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="rooms">
+          <mxGeometry y="186" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_6" value="status VARCHAR(20)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="rooms">
+          <mxGeometry y="212" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="rooms_7" value="is_active BOOLEAN" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="rooms">
+          <mxGeometry y="238" width="240" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== tenants ==================== -->
+        <mxCell id="tenants" value="tenants" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="680" y="40" width="220" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenants_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="tenants">
+          <mxGeometry y="30" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenants_1" value="citizen_id VARCHAR(20)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="tenants">
+          <mxGeometry y="56" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenants_2" value="first_name VARCHAR(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="tenants">
+          <mxGeometry y="82" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenants_3" value="last_name VARCHAR(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="tenants">
+          <mxGeometry y="108" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenants_4" value="phone / email" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="tenants">
+          <mxGeometry y="134" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenants_5" value="emergency_contact" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="tenants">
+          <mxGeometry y="160" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="tenants_6" value="is_active BOOLEAN" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="tenants">
+          <mxGeometry y="186" width="220" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== contracts ==================== -->
+        <mxCell id="contracts" value="contracts" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="380" width="260" height="340" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="contracts">
+          <mxGeometry y="30" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_fk1" value="FK  dormitory_id → dormitories" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="contracts">
+          <mxGeometry y="56" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_fk2" value="FK  room_id → rooms" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="contracts">
+          <mxGeometry y="82" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_1" value="contract_number VARCHAR(50)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="contracts">
+          <mxGeometry y="108" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_2" value="start_date / end_date DATE" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="contracts">
+          <mxGeometry y="134" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_3" value="monthly_rent DECIMAL(12,2)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="contracts">
+          <mxGeometry y="160" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_4" value="deposit_amount / status" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="contracts">
+          <mxGeometry y="186" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_5" value="status VARCHAR(20)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="contracts">
+          <mxGeometry y="212" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_6" value="terms TEXT" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="contracts">
+          <mxGeometry y="238" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="contracts_7" value="check_in_date / check_out_date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="contracts">
+          <mxGeometry y="264" width="260" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== contract_tenants ==================== -->
+        <mxCell id="ct" value="contract_tenants" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="680" y="340" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="ct_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="ct">
+          <mxGeometry y="30" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="ct_fk1" value="FK  contract_id → contracts" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="ct">
+          <mxGeometry y="56" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="ct_fk2" value="FK  tenant_id → tenants" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="ct">
+          <mxGeometry y="82" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="ct_1" value="is_primary BOOLEAN" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="ct">
+          <mxGeometry y="108" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="ct_2" value="move_in_date / move_out_date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="ct">
+          <mxGeometry y="134" width="240" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== transaction_categories ==================== -->
+        <mxCell id="cat" value="transaction_categories" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="380" width="220" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="cat_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="cat">
+          <mxGeometry y="30" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="cat_1" value="name VARCHAR(100)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="cat">
+          <mxGeometry y="56" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="cat_2" value="type (income / expense)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="cat">
+          <mxGeometry y="82" width="220" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="cat_3" value="is_system BOOLEAN" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="cat">
+          <mxGeometry y="108" width="220" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== transactions ==================== -->
+        <mxCell id="trx" value="transactions" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="600" width="260" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="trx">
+          <mxGeometry y="30" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_fk1" value="FK  dormitory_id → dormitories" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="trx">
+          <mxGeometry y="56" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_fk2" value="FK  room_id → rooms (nullable)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="trx">
+          <mxGeometry y="82" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_fk3" value="FK  contract_id → contracts" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="trx">
+          <mxGeometry y="108" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_fk4" value="FK  category_id → categories" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="trx">
+          <mxGeometry y="134" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_1" value="type (income / expense)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="trx">
+          <mxGeometry y="160" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_2" value="amount DECIMAL(12,2)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="trx">
+          <mxGeometry y="186" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_3" value="transaction_date + time" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="trx">
+          <mxGeometry y="212" width="260" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="trx_4" value="payment_status / paid_at" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="trx">
+          <mxGeometry y="238" width="260" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== invoices ==================== -->
+        <mxCell id="inv" value="invoices" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="680" y="600" width="240" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="inv">
+          <mxGeometry y="30" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_fk1" value="FK  dormitory_id → dormitories" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="inv">
+          <mxGeometry y="56" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_fk2" value="FK  contract_id → contracts" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="inv">
+          <mxGeometry y="82" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_1" value="invoice_number VARCHAR(50)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="inv">
+          <mxGeometry y="108" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_2" value="invoice_date / due_date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="inv">
+          <mxGeometry y="134" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_3" value="period_start / period_end" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="inv">
+          <mxGeometry y="160" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_4" value="subtotal / tax / total_amount" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="inv">
+          <mxGeometry y="186" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="inv_5" value="status VARCHAR(20)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="inv">
+          <mxGeometry y="212" width="240" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== invoice_items ==================== -->
+        <mxCell id="invitem" value="invoice_items" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="600" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="invitem_pk" value="PK  id BIGSERIAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontStyle=1" vertex="1" parent="invitem">
+          <mxGeometry y="30" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="invitem_fk1" value="FK  invoice_id → invoices" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="invitem">
+          <mxGeometry y="56" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="invitem_1" value="description VARCHAR(255)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="invitem">
+          <mxGeometry y="82" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="invitem_2" value="quantity / unit_price / amount" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;" vertex="1" parent="invitem">
+          <mxGeometry y="108" width="240" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="invitem_fk2" value="FK  transaction_id (optional)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;fontColor=#d79b00;" vertex="1" parent="invitem">
+          <mxGeometry y="134" width="240" height="26" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== Relationships ==================== -->
+        <!-- dormitories → rooms -->
+        <mxCell id="rel1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;" edge="1" parent="1" source="dorm" target="rooms">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- dormitories → contracts -->
+        <mxCell id="rel2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="dorm" target="contracts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- rooms → contracts -->
+        <mxCell id="rel3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;" edge="1" parent="1" source="rooms" target="contracts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- contracts → contract_tenants -->
+        <mxCell id="rel4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;" edge="1" parent="1" source="contracts" target="ct">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- tenants → contract_tenants -->
+        <mxCell id="rel5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;" edge="1" parent="1" source="tenants" target="ct">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- categories → transactions -->
+        <mxCell id="rel6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;" edge="1" parent="1" source="cat" target="trx">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- contracts → transactions -->
+        <mxCell id="rel7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" edge="1" parent="1" source="contracts" target="trx">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- contracts → invoices -->
+        <mxCell id="rel8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;" edge="1" parent="1" source="contracts" target="inv">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- invoices → invoice_items -->
+        <mxCell id="rel9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=ERmany;startArrow=ERone;endFill=0;startFill=0;" edge="1" parent="1" source="inv" target="invitem">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="Legend&#xa;• สีฟ้า = Master Data (หอพัก / ห้อง)&#xa;• สีเขียว = Tenant&#xa;• สีเหลือง = Contract (หัวใจระบบ)&#xa;• สีม่วง = Junction Table&#xa;• สีแดง = Financial&#xa;• สีส้ม = Invoice" style="rounded=1;whiteSpace=wrap;html=1;align=left;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;spacingLeft=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="40" width="260" height="160" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
