@@ -28,7 +28,7 @@ export const resources = {
       roomType: { column: "room_type", type: "text", nullable: true, maxLength: 50 },
       capacity: { column: "capacity", type: "integer", minimum: 1 },
       monthlyRent: { column: "monthly_rent", type: "decimal", minimum: 0 },
-      status: { column: "status", type: "enum", required: true, values: ["unpaid", "paid", "overdue"] },
+      status: { column: "status", type: "enum", required: true, values: ["available", "occupied", "maintenance"] },
       isActive: { column: "is_active", type: "boolean" },
     },
   },
