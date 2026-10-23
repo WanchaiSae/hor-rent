@@ -28,7 +28,7 @@ export const resources = {
       roomType: { column: "room_type", type: "text", nullable: true, maxLength: 50 },
       capacity: { column: "capacity", type: "integer", minimum: 1 },
       monthlyRent: { column: "monthly_rent", type: "decimal", minimum: 0 },
-      status: { column: "status", type: "text", maxLength: 20 },
+      status: { column: "status", type: "enum", required: true, values: ["unpaid", "paid", "overdue"] },
       isActive: { column: "is_active", type: "boolean" },
     },
   },
@@ -43,6 +43,69 @@ export const resources = {
       email: { column: "email", type: "text", nullable: true, maxLength: 255 },
       emergencyContact: { column: "emergency_contact", type: "text", nullable: true, maxLength: 255 },
       isActive: { column: "is_active", type: "boolean" },
+    },
+  },
+  suppliers: {
+    table: "suppliers",
+    orderBy: "name, id",
+    fields: {
+      name: { column: "name", type: "text", required: true, maxLength: 150 },
+      contactName: { column: "contact_name", type: "text", nullable: true, maxLength: 150 },
+      phone: { column: "phone", type: "text", nullable: true, maxLength: 30 },
+      email: { column: "email", type: "text", nullable: true, maxLength: 255 },
+      address: { column: "address", type: "text", nullable: true },
+      notes: { column: "notes", type: "text", nullable: true },
+      isActive: { column: "is_active", type: "boolean" },
+    },
+  },
+  amenities: {
+    table: "amenities",
+    listFrom: "amenities a JOIN dormitories d ON d.id = a.dormitory_id LEFT JOIN suppliers s ON s.id = a.supplier_id",
+    listFields: "a.*, d.name AS dormitory_name, s.name AS supplier_name",
+    itemFrom: "amenities a JOIN dormitories d ON d.id = a.dormitory_id LEFT JOIN suppliers s ON s.id = a.supplier_id",
+    itemFields: "a.*, d.name AS dormitory_name, s.name AS supplier_name",
+    itemIdColumn: "a.id",
+    orderBy: "d.name, a.amenity_type, a.location, a.name",
+    fields: {
+      dormitoryId: { column: "dormitory_id", type: "id", required: true },
+      supplierId: { column: "supplier_id", type: "id", nullable: true },
+      amenityType: { column: "amenity_type", type: "enum", required: true, values: ["laundry_machine", "water_dispenser"] },
+      name: { column: "name", type: "text", required: true, maxLength: 100 },
+      assetTag: { column: "asset_tag", type: "text", nullable: true, maxLength: 50 },
+      location: { column: "location", type: "text", required: true, maxLength: 150 },
+      status: { column: "status", type: "enum", required: true, values: ["active", "maintenance", "inactive"] },
+      installedOn: { column: "installed_on", type: "date", nullable: true },
+      lastServicedOn: { column: "last_serviced_on", type: "date", nullable: true },
+      notes: { column: "notes", type: "text", nullable: true },
+    },
+  },
+  maintenanceJobs: {
+    table: "maintenance_jobs",
+    listFrom: `maintenance_jobs m
+      LEFT JOIN rooms r ON r.id = m.room_id
+      LEFT JOIN amenities a ON a.id = m.amenity_id
+      LEFT JOIN suppliers s ON s.id = m.supplier_id`,
+    listFields: `m.*, r.room_number, a.name AS amenity_name, s.name AS supplier_name,
+      CASE WHEN m.room_id IS NOT NULL THEN CONCAT('ห้อง ', r.room_number) ELSE a.name END AS target_name`,
+    itemFrom: `maintenance_jobs m
+      LEFT JOIN rooms r ON r.id = m.room_id
+      LEFT JOIN amenities a ON a.id = m.amenity_id
+      LEFT JOIN suppliers s ON s.id = m.supplier_id`,
+    itemFields: `m.*, r.room_number, a.name AS amenity_name, s.name AS supplier_name,
+      CASE WHEN m.room_id IS NOT NULL THEN CONCAT('ห้อง ', r.room_number) ELSE a.name END AS target_name`,
+    itemIdColumn: "m.id",
+    orderBy: "m.reported_at DESC, m.id DESC",
+    fields: {
+      roomId: { column: "room_id", type: "id", nullable: true },
+      amenityId: { column: "amenity_id", type: "id", nullable: true },
+      supplierId: { column: "supplier_id", type: "id", nullable: true },
+      issueType: { column: "issue_type", type: "enum", required: true, values: ["lighting", "air_conditioning", "electrical", "plumbing", "door_lock", "furniture", "laundry_machine", "water_dispenser", "other"] },
+      title: { column: "title", type: "text", required: true, maxLength: 150 },
+      description: { column: "description", type: "text", nullable: true },
+      priority: { column: "priority", type: "enum", required: true, values: ["low", "normal", "high", "urgent"] },
+      status: { column: "status", type: "enum", required: true, values: ["open", "in_progress", "resolved", "cancelled"] },
+      resolvedOn: { column: "resolved_on", type: "date", nullable: true },
+      cost: { column: "cost", type: "decimal", nullable: true, minimum: 0 },
     },
   },
   contracts: {
@@ -65,7 +128,26 @@ export const resources = {
   },
   contractTenants: {
     table: "contract_tenants",
-    orderBy: "contract_id, id",
+    listFrom: `contract_tenants ct
+      JOIN contracts c ON c.id = ct.contract_id
+      JOIN rooms r ON r.id = c.room_id
+      JOIN tenants t ON t.id = ct.tenant_id`,
+    listFields: `ct.id, ct.contract_id, ct.tenant_id, ct.is_primary,
+      (COALESCE(ct.move_in_date, c.check_in_date))::text AS move_in_date,
+      (COALESCE(ct.move_out_date, c.check_out_date))::text AS move_out_date,
+      c.contract_number, r.room_number,
+      CONCAT(t.first_name, ' ', t.last_name) AS tenant_name`,
+    itemFrom: `contract_tenants ct
+      JOIN contracts c ON c.id = ct.contract_id
+      JOIN rooms r ON r.id = c.room_id
+      JOIN tenants t ON t.id = ct.tenant_id`,
+    itemFields: `ct.id, ct.contract_id, ct.tenant_id, ct.is_primary,
+      (COALESCE(ct.move_in_date, c.check_in_date))::text AS move_in_date,
+      (COALESCE(ct.move_out_date, c.check_out_date))::text AS move_out_date,
+      c.contract_number, r.room_number,
+      CONCAT(t.first_name, ' ', t.last_name) AS tenant_name`,
+    itemIdColumn: "ct.id",
+    orderBy: "c.contract_number, ct.is_primary DESC, t.last_name, t.first_name",
     fields: {
       contractId: { column: "contract_id", type: "id", required: true },
       tenantId: { column: "tenant_id", type: "id", required: true },
@@ -80,21 +162,27 @@ export const resources = {
     fields: {
       name: { column: "name", type: "text", required: true, maxLength: 100 },
       type: { column: "type", type: "enum", required: true, values: ["income", "expense"] },
+      defaultAmount: { column: "default_amount", type: "decimal", nullable: true, minimum: 0 },
       isSystem: { column: "is_system", type: "boolean" },
     },
   },
   transactions: {
     table: "transactions",
-    orderBy: "transaction_date DESC, id DESC",
+    listFrom: "transactions t JOIN transaction_categories tc ON tc.id = t.category_id",
+    listFields: "t.*, tc.name AS category_name",
+    itemFrom: "transactions t JOIN transaction_categories tc ON tc.id = t.category_id",
+    itemFields: "t.*, tc.name AS category_name",
+    itemIdColumn: "t.id",
+    orderBy: "t.transaction_date DESC, t.id DESC",
     fields: {
       dormitoryId: { column: "dormitory_id", type: "id", required: true },
       roomId: { column: "room_id", type: "id", nullable: true },
       contractId: { column: "contract_id", type: "id", nullable: true },
       categoryId: { column: "category_id", type: "id", required: true },
       type: { column: "type", type: "enum", required: true, values: ["income", "expense"] },
-      amount: { column: "amount", type: "decimal", required: true, minimum: 0 },
+      amount: { column: "amount", type: "decimal", minimum: 0 },
       transactionDate: { column: "transaction_date", type: "timestamp" },
-      paymentStatus: { column: "payment_status", type: "text", maxLength: 20 },
+      paymentStatus: { column: "payment_status", type: "enum", required: true, values: ["paid", "pending", "void"] },
       paidAt: { column: "paid_at", type: "timestamp", nullable: true },
       note: { column: "note", type: "text", nullable: true },
     },

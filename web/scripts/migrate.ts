@@ -20,7 +20,17 @@ try {
     )
   `);
 
-  const migrations = ["001_initial_schema", "002_contract_rental_period"];
+  const migrations = [
+    "001_initial_schema",
+    "002_contract_rental_period",
+    "003_room_floor",
+    "004_backfill_room_floor",
+    "005_sync_active_contract_room_status",
+    "006_contract_tenant_unique_pair",
+    "007_property_operations",
+    "008_maintenance_issue_type",
+    "009_transaction_category_default_amount",
+  ];
 
   for (const version of migrations) {
     const existing = await client.query(

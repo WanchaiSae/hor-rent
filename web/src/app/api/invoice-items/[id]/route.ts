@@ -1,17 +1,14 @@
-import { createCrudController } from "@/lib/controllers/crud-controller";
-import { resources } from "@/lib/resources/definitions";
-
-const controller = createCrudController(resources.invoiceItems);
+import { invoiceItemsController } from "@/lib/controllers/invoice-items-controller";
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: RouteParams) {
-  return controller.get((await params).id);
+  return invoiceItemsController.get((await params).id);
 }
 
 export async function PATCH(request: Request, { params }: RouteParams) {
-  return controller.update((await params).id, request);
+  return invoiceItemsController.update((await params).id, request);
 }
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
-  return controller.remove((await params).id);
+  return invoiceItemsController.remove((await params).id);
 }

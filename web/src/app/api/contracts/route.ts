@@ -1,7 +1,4 @@
-import { createCrudController } from "@/lib/controllers/crud-controller";
-import { resources } from "@/lib/resources/definitions";
+import { contractsController } from "@/lib/controllers/contracts-controller";
 
-const controller = createCrudController(resources.contracts);
-
-export const GET = controller.list;
-export const POST = controller.create;
+export const GET = contractsController.list;
+export const POST = contractsController.create;

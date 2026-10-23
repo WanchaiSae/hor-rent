@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createRecord, deleteRecord, getCollection, updateRecord, type ApiRecord } from "@/lib/client/api";
 import { clientResources } from "@/lib/client/resources";
 import { ResourceManager } from "@/components/resource-manager";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export function RoomsManager({ search }: { search: string }) {
   const [dormitories, setDormitories] = useState<ApiRecord[]>([]);
@@ -12,6 +13,8 @@ export function RoomsManager({ search }: { search: string }) {
   const [selected, setSelected] = useState<ApiRecord | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ApiRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ApiRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadDormitories = useCallback(async () => {
     setLoading(true);
@@ -49,13 +52,18 @@ export function RoomsManager({ search }: { search: string }) {
   }
 
   async function removeDormitory(dormitory: ApiRecord) {
-    if (!window.confirm(`ต้องการลบ${String(dormitory.name)}หรือไม่?`)) return;
+    setDeleting(true);
+    setError("");
     try {
       await deleteRecord("dormitories", dormitory.id);
       if (selected?.id === dormitory.id) setSelected(null);
+      setDeleteTarget(null);
       await loadDormitories();
     } catch (reason) {
+      setDeleteTarget(null);
       setError(reason instanceof Error ? reason.message : "ลบหอพักไม่สำเร็จ");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -125,7 +133,7 @@ export function RoomsManager({ search }: { search: string }) {
                       <button className="icon-button text-blue-600" onClick={(event) => openEdit(event, dormitory)} type="button" title="แก้ไขหอพัก">
                         <span className="material-icons-round">edit</span>
                       </button>
-                      <button className="icon-button text-red-500" onClick={(event) => { event.stopPropagation(); void removeDormitory(dormitory); }} type="button" title="ลบหอพัก">
+                      <button className="icon-button text-red-500" onClick={(event) => { event.stopPropagation(); setError(""); setDeleteTarget(dormitory); }} type="button" title="ลบหอพัก">
                         <span className="material-icons-round">delete_outline</span>
                       </button>
                     </div>
@@ -178,6 +186,17 @@ export function RoomsManager({ search }: { search: string }) {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="ลบหอพักนี้หรือไม่?"
+        description={deleteTarget
+          ? `ยืนยันลบ “${String(deleteTarget.name)}” หรือไม่? หอพักที่ยังมีห้องหรือข้อมูลอ้างอิงอยู่จะไม่สามารถลบได้`
+          : ""}
+        busy={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && void removeDormitory(deleteTarget)}
+      />
     </section>
   );
 }

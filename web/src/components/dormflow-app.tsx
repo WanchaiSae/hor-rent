@@ -21,10 +21,10 @@ const additionalNavigation = [
   { key: "transaction-categories", label: "หมวดหมู่การเงิน", icon: "category" },
 ];
 
-const notYetModeled = [
+const operationsNavigation = [
   { key: "suppliers", label: "ร้านค้า & ซัพพลายเออร์", icon: "store" },
-  { key: "vending", label: "ซักผ้า & ตู้กดน้ำ", icon: "local_laundry_service" },
-  { key: "maintenance", label: "งานซ่อมบำรุง", icon: "build" },
+  { key: "amenities", label: "ซักผ้า & ตู้กดน้ำ", icon: "local_laundry_service" },
+  { key: "maintenanceJobs", label: "งานซ่อมบำรุง", icon: "build" },
 ];
 
 type PageKey = "dashboard" | "rooms" | string;
@@ -38,7 +38,7 @@ export function DormFlowApp() {
   const currentTitle = useMemo(() => {
     if (activePage === "dashboard") return "ภาพรวมระบบ";
     if (activePage === "rooms") return "จัดการห้องพัก";
-    return activeResource?.title ?? notYetModeled.find((item) => item.key === activePage)?.label ?? "DormFlow";
+    return activeResource?.title ?? "DormFlow";
   }, [activePage, activeResource]);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export function DormFlowApp() {
               <NavigationButton active={activePage === item.key} item={item} key={item.key} onClick={() => navigate(item.key)} />
             ))}
             <div className="sidebar-divider"><span>ส่วนงานเพิ่มเติม</span></div>
-            {notYetModeled.map((item) => (
+            {operationsNavigation.map((item) => (
               <NavigationButton active={activePage === item.key} item={item} key={item.key} onClick={() => navigate(item.key)} />
             ))}
           </nav>
@@ -115,7 +115,6 @@ export function DormFlowApp() {
           {activePage === "dashboard" ? <Dashboard /> : null}
           {activePage === "rooms" ? <RoomsManager search={search} /> : null}
           {activeResource ? <ResourceManager key={activeResource.key} resource={activeResource} search={search} /> : null}
-          {notYetModeled.some((item) => item.key === activePage) ? <NotAvailable title={currentTitle} /> : null}
         </main>
 
         <nav aria-label="เมนูด้านล่าง" className="mobile-nav">
@@ -150,8 +149,24 @@ function NavigationButton({
 function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [summary, setSummary] = useState({ rooms: 0, available: 0, tenants: 0, income: 0, outstanding: 0 });
-  const [recentTransactions, setRecentTransactions] = useState<ApiRecord[]>([]);
+  const [period, setPeriod] = useState<"all" | "month" | "week" | "custom">("month");
+  const [today, setToday] = useState("");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [dashboardData, setDashboardData] = useState({
+    rooms: [] as ApiRecord[],
+    tenants: [] as ApiRecord[],
+    contracts: [] as ApiRecord[],
+    contractTenants: [] as ApiRecord[],
+    invoices: [] as ApiRecord[],
+    transactions: [] as ApiRecord[],
+  });
+
+  // Compute after hydration so server and browser render the same initial date.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setToday(getDateInBangkok(new Date()) ?? "");
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -163,22 +178,9 @@ function Dashboard() {
           getCollection<ApiRecord>("contracts", "", controller.signal),
           getCollection<ApiRecord>("contract-tenants", "", controller.signal),
           getCollection<ApiRecord>("invoices", "", controller.signal),
-          getCollection<ApiRecord>("transactions", "", controller.signal),
+          getAllCollection<ApiRecord>("transactions", controller.signal),
         ]);
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        const today = new Date().toISOString().slice(0, 10);
-        const income = transactions.reduce((total, transaction) => {
-          const date = String(transaction.transaction_date ?? "").slice(0, 7);
-          return date === currentMonth && transaction.type === "income" ? total + Number(transaction.amount) : total;
-        }, 0);
-        setSummary({
-          rooms: rooms.length,
-          available: rooms.filter((room) => room.status === "available" && room.is_active).length,
-          tenants: countCurrentTenants(tenants, contracts, contractTenants, today),
-          income,
-          outstanding: invoices.filter((invoice) => invoice.status !== "paid").length,
-        });
-        setRecentTransactions(transactions.slice(0, 5));
+        setDashboardData({ rooms, tenants, contracts, contractTenants, invoices, transactions });
       } catch (reason) {
         if (reason instanceof DOMException && reason.name === "AbortError") return;
         setError(reason instanceof Error ? reason.message : "โหลดข้อมูลภาพรวมไม่สำเร็จ");
@@ -190,11 +192,30 @@ function Dashboard() {
     return () => controller.abort();
   }, []);
 
+  const range = useMemo(() => getDashboardDateRange(period, today, customStart, customEnd), [period, today, customStart, customEnd]);
+  const periodTransactions = useMemo(() => dashboardData.transactions
+    .filter((transaction) => {
+      const date = getDateInBangkok(transaction.transaction_date);
+      return Boolean(date && range.valid && (!range.start || date >= range.start) && (!range.end || date <= range.end));
+    })
+    .filter((transaction) => transaction.payment_status !== "void")
+    .sort((left, right) => new Date(String(right.transaction_date)).getTime() - new Date(String(left.transaction_date)).getTime()),
+  [dashboardData.transactions, range]);
+  const income = periodTransactions.reduce((total, transaction) =>
+    transaction.type === "income" && transaction.payment_status === "paid" ? total + Number(transaction.amount) : total, 0);
+  const expenses = periodTransactions.reduce((total, transaction) =>
+    transaction.type === "expense" && transaction.payment_status === "paid" ? total + Number(transaction.amount) : total, 0);
+  const recentTransactions = periodTransactions.slice(0, 5);
+  const availableRooms = dashboardData.rooms.filter((room) => room.status === "available" && room.is_active).length;
+  const currentTenants = countCurrentTenants(dashboardData.tenants, dashboardData.contracts, dashboardData.contractTenants, today);
+  const outstandingInvoices = dashboardData.invoices.filter((invoice) => invoice.status !== "paid").length;
+
   const stats = [
-    { label: "ห้องพักทั้งหมด", value: loading ? "—" : `${summary.rooms} ห้อง`, icon: "meeting_room", color: "blue" },
-    { label: "ห้องว่าง", value: loading ? "—" : `${summary.available} ห้อง`, icon: "check_circle", color: "green" },
-    { label: "ผู้เช่าปัจจุบัน", value: loading ? "—" : `${summary.tenants} คน`, icon: "people", color: "indigo" },
-    { label: "รายรับเดือนนี้", value: loading ? "—" : money(summary.income), icon: "payments", color: "amber" },
+    { label: "ห้องพักทั้งหมด", value: loading ? "—" : `${dashboardData.rooms.length} ห้อง`, icon: "meeting_room", color: "blue" },
+    { label: "ห้องว่าง", value: loading ? "—" : `${availableRooms} ห้อง`, icon: "check_circle", color: "green" },
+    { label: "ผู้เช่าปัจจุบัน", value: loading ? "—" : `${currentTenants} คน`, icon: "people", color: "indigo" },
+    { label: "รับชำระแล้ว", value: loading ? "—" : money(income), icon: "payments", color: "amber" },
+    { label: "จ่ายแล้ว", value: loading ? "—" : money(expenses), icon: "payments", color: "red" },
   ];
 
   return (
@@ -204,12 +225,30 @@ function Dashboard() {
         <p className="mt-1 text-sm text-gray-500">สรุปข้อมูลจากฐานข้อมูลหอพัก</p>
       </div>
       {error && <p className="notice-error" role="alert">{error}</p>}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+      <section className="panel flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <label className="form-label" htmlFor="dashboard-period">ช่วงเวลารายรับ–รายจ่าย</label>
+          <select className="form-control mt-1 min-w-48" id="dashboard-period" onChange={(event) => setPeriod(event.target.value as typeof period)} value={period}>
+            <option value="all">ทั้งหมด</option>
+            <option value="month">เดือนนี้</option>
+            <option value="week">สัปดาห์นี้</option>
+            <option value="custom">เลือกช่วงเอง</option>
+          </select>
+        </div>
+        {period === "custom" && (
+          <div className="grid grid-cols-2 gap-3 sm:min-w-[420px]">
+            <label className="form-label" htmlFor="dashboard-start">ตั้งแต่<input className="form-control" id="dashboard-start" max={customEnd || undefined} onChange={(event) => setCustomStart(event.target.value)} type="date" value={customStart} /></label>
+            <label className="form-label" htmlFor="dashboard-end">ถึง<input className="form-control" id="dashboard-end" min={customStart || undefined} onChange={(event) => setCustomEnd(event.target.value)} type="date" value={customEnd} /></label>
+          </div>
+        )}
+        <p className="text-xs text-gray-500">{range.label}</p>
+      </section>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4 xl:grid-cols-5">
         {stats.map((stat) => (
           <article className="stat-card" key={stat.label}>
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-gray-400">{stat.label}</p>
-              <p className={`mt-2 text-xl font-bold sm:text-2xl ${stat.color === "green" ? "text-emerald-600" : "text-gray-900"}`}>{stat.value}</p>
+              <p className={`mt-2 text-xl font-bold sm:text-2xl ${stat.color === "green" ? "text-emerald-600" : stat.color === "red" ? "text-red-600" : "text-gray-900"}`}>{stat.value}</p>
             </div>
             <span className={`stat-icon stat-${stat.color} material-icons-round`}>{stat.icon}</span>
           </article>
@@ -219,11 +258,13 @@ function Dashboard() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
         <section className="panel overflow-hidden">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-            <div><h2 className="font-bold text-gray-900">รายการล่าสุด</h2><p className="mt-0.5 text-xs text-gray-500">รายรับและรายจ่ายล่าสุด</p></div>
+            <div><h2 className="font-bold text-gray-900">รายการล่าสุด</h2><p className="mt-0.5 text-xs text-gray-500">{range.label} · ไม่รวมรายการยกเลิก</p></div>
             <span className="material-icons-round text-gray-400">receipt_long</span>
           </div>
-          {recentTransactions.length === 0 ? (
-            <p className="p-8 text-center text-sm text-gray-500">ยังไม่มีรายการธุรกรรม</p>
+          {!range.valid ? (
+            <p className="p-8 text-center text-sm text-gray-500">เลือกวันเริ่มต้นและวันสิ้นสุดที่ถูกต้อง</p>
+          ) : recentTransactions.length === 0 ? (
+            <p className="p-8 text-center text-sm text-gray-500">ไม่มีรายการในช่วงเวลานี้</p>
           ) : recentTransactions.map((transaction) => (
             <div className="flex items-center justify-between gap-3 border-b border-gray-50 px-5 py-3 last:border-0" key={transaction.id}>
               <div className="flex min-w-0 items-center gap-3">
@@ -244,7 +285,7 @@ function Dashboard() {
             <div><h2 className="font-bold text-gray-900">ใบแจ้งหนี้ที่ต้องติดตาม</h2><p className="mt-1 text-xs text-gray-500">รายการที่ยังไม่ได้ทำเครื่องหมายว่าชำระแล้ว</p></div>
             <span className="rounded-xl bg-red-50 p-2.5 text-red-500"><span className="material-icons-round">warning_amber</span></span>
           </div>
-          <p className="mt-7 text-3xl font-bold text-gray-900">{loading ? "—" : summary.outstanding}<span className="ml-2 text-base font-medium text-gray-500">รายการ</span></p>
+          <p className="mt-7 text-3xl font-bold text-gray-900">{loading ? "—" : outstandingInvoices}<span className="ml-2 text-base font-medium text-gray-500">รายการ</span></p>
           <p className="mt-2 text-sm text-gray-500">ตรวจสอบสถานะและวันครบกำหนดในหน้าใบแจ้งหนี้</p>
         </section>
       </div>
@@ -266,8 +307,8 @@ function countCurrentTenants(
       .filter((contract) =>
         contract.status === "active"
         && Boolean(contract.room_id)
-        && String(contract.start_date ?? "").slice(0, 10) <= today
-        && (!contract.end_date || String(contract.end_date).slice(0, 10) >= today),
+        && (getDateInBangkok(contract.start_date) ?? "") <= today
+        && (!contract.end_date || (getDateInBangkok(contract.end_date) ?? "") >= today),
       )
       .map((contract) => String(contract.id)),
   );
@@ -277,25 +318,13 @@ function countCurrentTenants(
       .filter((link) =>
         currentContractIds.has(String(link.contract_id))
         && activeTenantIds.has(String(link.tenant_id))
-        && (!link.move_in_date || String(link.move_in_date).slice(0, 10) <= today)
-        && (!link.move_out_date || String(link.move_out_date).slice(0, 10) >= today),
+        && (!link.move_in_date || (getDateInBangkok(link.move_in_date) ?? "") <= today)
+        && (!link.move_out_date || (getDateInBangkok(link.move_out_date) ?? "") >= today),
       )
       .map((link) => String(link.tenant_id)),
   );
 
   return currentTenantIds.size;
-}
-
-function NotAvailable({ title }: { title: string }) {
-  return (
-    <section className="panel flex min-h-72 flex-col items-center justify-center p-8 text-center">
-      <span className="material-icons-round text-4xl text-gray-300">database</span>
-      <h1 className="mt-3 text-lg font-bold text-gray-800">{title}</h1>
-      <p className="mt-1 max-w-md text-sm leading-6 text-gray-500">
-        ฐานข้อมูลปัจจุบันยังไม่มีตารางสำหรับส่วนนี้ จึงยังไม่มีข้อมูลให้แสดงหรือบันทึก
-      </p>
-    </section>
-  );
 }
 
 function money(value: number): string {
@@ -306,5 +335,81 @@ function formatDate(value: unknown): string {
   if (!value) return "—";
   const date = new Date(String(value));
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("th-TH", { dateStyle: "medium" }).format(date);
+  return new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Bangkok" }).format(date);
+}
+
+type DashboardPeriod = "all" | "month" | "week" | "custom";
+
+interface DashboardDateRange {
+  start: string | null;
+  end: string | null;
+  valid: boolean;
+  label: string;
+}
+
+async function getAllCollection<T>(resource: string, signal: AbortSignal): Promise<T[]> {
+  const pageSize = 100;
+  const records: T[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const params = new URLSearchParams({ limit: String(pageSize), offset: String(offset) });
+    const page = await getCollection<T>(resource, params.toString(), signal);
+    records.push(...page);
+    if (page.length < pageSize) return records;
+  }
+}
+
+function getDashboardDateRange(
+  period: DashboardPeriod,
+  today: string,
+  customStart: string,
+  customEnd: string,
+): DashboardDateRange {
+  if (period === "all") return { start: null, end: null, valid: true, label: "ตลอดช่วงข้อมูล" };
+  if (period === "custom") {
+    const valid = Boolean(customStart && customEnd && customStart <= customEnd);
+    return {
+      start: customStart || null,
+      end: customEnd || null,
+      valid,
+      label: valid ? `${formatCalendarDate(customStart)} – ${formatCalendarDate(customEnd)}` : "เลือกวันเริ่มต้นและวันสิ้นสุด",
+    };
+  }
+
+  if (!today) return { start: null, end: null, valid: false, label: "ไม่สามารถระบุวันที่ปัจจุบันได้" };
+  if (period === "month") {
+    const start = `${today.slice(0, 7)}-01`;
+    return { start, end: today, valid: true, label: `เดือนนี้ · ${formatCalendarDate(start)} – ${formatCalendarDate(today)}` };
+  }
+
+  const [year, month, day] = today.split("-").map(Number);
+  const utcToday = new Date(Date.UTC(year, month - 1, day));
+  const mondayOffset = (utcToday.getUTCDay() + 6) % 7;
+  utcToday.setUTCDate(utcToday.getUTCDate() - mondayOffset);
+  const start = utcToday.toISOString().slice(0, 10);
+  return { start, end: today, valid: true, label: `สัปดาห์นี้ · ${formatCalendarDate(start)} – ${formatCalendarDate(today)}` };
+}
+
+function getDateInBangkok(value: unknown): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  const input = String(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value;
+  const year = part("year");
+  const month = part("month");
+  const day = part("day");
+  return year && month && day ? `${year}-${month}-${day}` : null;
+}
+
+function formatCalendarDate(value: string): string {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeZone: "UTC" })
+    .format(new Date(Date.UTC(year, month - 1, day)));
 }

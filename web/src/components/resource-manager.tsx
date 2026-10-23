@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createRecord, deleteRecord, getCollection, updateRecord, type ApiRecord } from "@/lib/client/api";
 import type { ClientResource, FormField } from "@/lib/client/resources";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 const PAGE_SIZE = 100;
 
@@ -30,9 +31,12 @@ export function ResourceManager({
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ApiRecord | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ApiRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [notice, setNotice] = useState("");
   const [referenceOptions, setReferenceOptions] = useState<Record<string, ApiRecord[]>>({});
   const [selectedDormitoryId, setSelectedDormitoryId] = useState("");
+  const [selectedFilterValues, setSelectedFilterValues] = useState<Record<string, string>>({});
   const [availableRooms, setAvailableRooms] = useState<ApiRecord[]>([]);
 
   const loadRows = useCallback(async (signal?: AbortSignal) => {
@@ -106,18 +110,54 @@ export function ResourceManager({
   function openCreate() {
     setEditing(null);
     setSelectedDormitoryId("");
+    setSelectedFilterValues(resource.endpoint === "transactions" ? { type: "income" } : {});
     setModalOpen(true);
   }
 
   function openEdit(row: ApiRecord) {
     setEditing(row);
     setSelectedDormitoryId(String(row.dormitory_id ?? ""));
+    setSelectedFilterValues(resource.endpoint === "transactions" ? { type: String(row.type ?? "") } : {});
     setModalOpen(true);
   }
 
   function handleFormChange(event: React.ChangeEvent<HTMLFormElement>) {
+    const target = event.target;
+    if (resource.endpoint === "invoice-items" && target instanceof HTMLInputElement
+      && (target.name === "quantity" || target.name === "unitPrice")) {
+      const quantity = event.currentTarget.elements.namedItem("quantity");
+      const unitPrice = event.currentTarget.elements.namedItem("unitPrice");
+      const amount = event.currentTarget.elements.namedItem("amount");
+      if (quantity instanceof HTMLInputElement && unitPrice instanceof HTMLInputElement && amount instanceof HTMLInputElement) {
+        const quantityValue = quantity.value === "" ? Number.NaN : Number(quantity.value);
+        const unitPriceValue = unitPrice.value === "" ? Number.NaN : Number(unitPrice.value);
+        amount.value = Number.isFinite(quantityValue) && quantityValue > 0
+          && Number.isFinite(unitPriceValue) && unitPriceValue >= 0
+          ? (Math.round((quantityValue * unitPriceValue + Number.EPSILON) * 100) / 100).toFixed(2)
+          : "";
+      }
+    }
     if (event.target instanceof HTMLSelectElement && event.target.name === "dormitoryId") {
       setSelectedDormitoryId(event.target.value);
+    }
+    if (event.target instanceof HTMLSelectElement) {
+      const dependents = resource.fields.filter((field) => field.filterBy?.field === event.target.name);
+      if (dependents.length > 0) {
+        setSelectedFilterValues((current) => ({ ...current, [event.target.name]: event.target.value }));
+        for (const dependent of dependents) {
+          const control = event.currentTarget.elements.namedItem(dependent.key);
+          if (control instanceof HTMLSelectElement) control.value = "";
+        }
+      }
+      if (resource.endpoint === "transactions" && event.target.name === "categoryId") {
+        const category = (referenceOptions["transaction-categories"] ?? []).find((option) => String(option.id) === event.target.value);
+        const amount = event.currentTarget.elements.namedItem("amount");
+        if (amount instanceof HTMLInputElement) {
+          amount.value = category?.default_amount === null || category?.default_amount === undefined
+            ? ""
+            : String(category.default_amount);
+        }
+      }
     }
   }
 
@@ -128,25 +168,51 @@ export function ResourceManager({
     const form = new FormData(event.currentTarget);
     const input: Record<string, unknown> = { ...fixedValues };
 
-    for (const field of resource.fields) {
-      if (field.key in fixedValues || field.hidden) continue;
-      const raw = form.get(field.key);
-      if (field.type === "checkbox") {
-        input[field.key] = raw === "on";
-        continue;
-      }
-      if (raw === null || raw === "") {
-        if (field.nullable) input[field.key] = null;
-        continue;
-      }
-      input[field.key] = field.type === "number"
-        ? Number(raw)
-        : field.key === "citizenId"
-          ? String(raw).replace(/\D/g, "")
-          : raw;
-    }
-
     try {
+      for (const field of resource.fields) {
+        if (field.key in fixedValues || field.hidden) continue;
+        const raw = form.get(field.key);
+        if (field.type === "checkbox") {
+          input[field.key] = raw === "on";
+          continue;
+        }
+        if (raw === null || raw === "") {
+          if (field.nullable) input[field.key] = null;
+          continue;
+        }
+        input[field.key] = field.type === "number"
+          ? parseNumberField(field.key, raw)
+          : field.key === "citizenId"
+            ? String(raw).replace(/\D/g, "")
+            : raw;
+      }
+
+      if (resource.endpoint === "maintenance-jobs") {
+        const hasRoom = input.roomId !== null && input.roomId !== undefined;
+        const hasAmenity = input.amenityId !== null && input.amenityId !== undefined;
+        if (hasRoom === hasAmenity) {
+          throw new Error("เลือกห้องหรืออุปกรณ์ที่มีปัญหาเพียงอย่างเดียว");
+        }
+      }
+
+      if (resource.endpoint === "transactions" && input.amount === undefined) {
+        const category = (referenceOptions["transaction-categories"] ?? []).find(
+          (option) => String(option.id) === String(input.categoryId ?? ""),
+        );
+        if (category?.default_amount === null || category?.default_amount === undefined) {
+          throw new Error("กรุณากรอกจำนวนเงินจริง หรือตั้งจำนวนเงินตั้งต้นไว้ในหมวดหมู่การเงิน");
+        }
+        input.amount = Number(category.default_amount);
+      }
+
+      if (resource.endpoint === "transactions") {
+        if (input.paymentStatus === "paid" && !input.paidAt) {
+          input.paidAt = new Date().toISOString();
+        } else if (input.paymentStatus !== "paid") {
+          input.paidAt = null;
+        }
+      }
+
       if (editing) {
         await updateRecord(resource.endpoint, editing.id, input);
         setNotice(`แก้ไข${resource.singular}แล้ว`);
@@ -164,15 +230,21 @@ export function ResourceManager({
     }
   }
 
-  async function handleDelete(row: ApiRecord) {
-    if (!window.confirm(`ต้องการลบ${resource.singular}รายการนี้หรือไม่?`)) return;
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const row = deleteTarget;
+    setDeleting(true);
     setError("");
     try {
       await deleteRecord(resource.endpoint, row.id);
       setNotice(`ลบ${resource.singular}แล้ว`);
+      setDeleteTarget(null);
       await loadRows();
     } catch (reason) {
+      setDeleteTarget(null);
       setError(reason instanceof Error ? reason.message : "ลบข้อมูลไม่สำเร็จ");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -210,14 +282,14 @@ export function ResourceManager({
                 <tr key={row.id}>
                   {resource.columns.map((column) => {
                     const value = row[column.key];
-                    return <td key={column.key}>{column.format ? column.format(value, row) : displayValue(value)}</td>;
+                    return <td key={column.key}>{column.render ? column.render(value, row) : column.format ? column.format(value, row) : displayValue(value)}</td>;
                   })}
                   <td>
                     <div className="flex justify-end gap-1">
                       <button className="icon-button text-blue-600" onClick={() => openEdit(row)} title="แก้ไข" type="button">
                         <span className="material-icons-round">edit</span>
                       </button>
-                      <button className="icon-button text-red-500" onClick={() => void handleDelete(row)} title="ลบ" type="button">
+                      <button className="icon-button text-red-500" onClick={() => setDeleteTarget(row)} title="ลบ" type="button">
                         <span className="material-icons-round">delete_outline</span>
                       </button>
                     </div>
@@ -258,8 +330,12 @@ export function ResourceManager({
                 {resource.fields.filter((field) => !field.hidden && !(field.key in fixedValues)).map((field) => (
                   <FormControl
                     field={field}
-                    key={field.dependsOn ? `${field.key}-${selectedDormitoryId}` : field.key}
-                    options={field.dependsOn ? availableRooms : field.source ? referenceOptions[field.source.endpoint] ?? [] : []}
+                    key={field.dependsOn ? `${field.key}-${selectedDormitoryId}` : field.filterBy ? `${field.key}-${selectedFilterValues[field.filterBy.field] ?? ""}` : field.key}
+                    options={field.dependsOn
+                      ? availableRooms.filter((room) => room.status === "available" || String(room.id) === String(editing?.room_id ?? ""))
+                      : field.source ? (referenceOptions[field.source.endpoint] ?? []).filter((option) =>
+                        !field.filterBy || String(option[field.filterBy.optionKey] ?? "") === (selectedFilterValues[field.filterBy.field] ?? ""),
+                      ) : []}
                     row={editing}
                     disabled={Boolean(field.dependsOn && !selectedDormitoryId)}
                   />
@@ -276,8 +352,39 @@ export function ResourceManager({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={`ลบ${resource.singular}หรือไม่?`}
+        description={deleteTarget
+          ? `ยืนยันลบ “${recordLabel(deleteTarget)}” หรือไม่? หากข้อมูลนี้ถูกใช้อ้างอิงในรายการอื่น ระบบจะปฏิเสธการลบเพื่อป้องกันข้อมูลเสียหาย`
+          : ""}
+        busy={deleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => void confirmDelete()}
+      />
     </section>
   );
+}
+
+function recordLabel(row: ApiRecord): string {
+  const tenantName = [row.first_name, row.last_name].filter(Boolean).join(" ");
+  const label = tenantName
+    || row.room_number
+    || row.contract_number
+    || row.invoice_number
+    || row.name
+    || row.title
+    || row.note;
+  return String(label || `#${row.id}`);
+}
+
+function parseNumberField(fieldName: string, value: FormDataEntryValue): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`${fieldName} must be a valid number`);
+  }
+  return parsed;
 }
 
 function FormControl({ field, options, row, disabled = false }: { field: FormField; options: ApiRecord[]; row: ApiRecord | null; disabled?: boolean }) {
@@ -289,7 +396,7 @@ function FormControl({ field, options, row, disabled = false }: { field: FormFie
     required: field.required,
     className: "form-control",
     placeholder: field.placeholder,
-    defaultValue: formatInputValue(value, field.type),
+    defaultValue: formatInputValue(value, field.type) ?? field.defaultValue ?? "",
   };
 
   if (field.type === "checkbox") {
@@ -309,7 +416,7 @@ function FormControl({ field, options, row, disabled = false }: { field: FormFie
   if (field.type === "select") {
     return (
       <label className="form-label" htmlFor={field.key}>{field.label}
-        <select {...common} defaultValue={formatInputValue(value, field.type) ?? ""} disabled={disabled}>
+        <select {...common} defaultValue={formatInputValue(value, field.type) ?? field.defaultValue ?? ""} disabled={disabled}>
           <option value="">{disabled ? "เลือกหอพักก่อน" : `เลือก${field.label}`}</option>
           {field.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           {field.source?.endpoint && options.map((option) => (
@@ -321,7 +428,7 @@ function FormControl({ field, options, row, disabled = false }: { field: FormFie
   }
   return (
     <label className="form-label" htmlFor={field.key}>{field.label}
-      <input {...common} step={field.step} type={field.type ?? "text"} />
+      <input {...common} readOnly={field.readOnly} step={field.step} type={field.type ?? "text"} />
     </label>
   );
 }

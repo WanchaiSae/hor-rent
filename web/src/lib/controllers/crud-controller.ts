@@ -5,7 +5,15 @@ import type { FieldDefinition, ResourceDefinition } from "@/lib/resources/types"
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 100;
 
-export function createCrudController(resource: ResourceDefinition) {
+export interface CrudValidationContext {
+  operation: "create" | "update";
+  id?: string;
+}
+
+export function createCrudController(
+  resource: ResourceDefinition,
+  validate?: (fields: DatabaseFields, context: CrudValidationContext) => Promise<void>,
+) {
   const repository = new CrudRepository(resource);
 
   return {
@@ -27,7 +35,8 @@ export function createCrudController(resource: ResourceDefinition) {
 
     async create(request: Request): Promise<Response> {
       try {
-        const fields = await parseFields(request, resource, true);
+        const fields = await parseResourceFields(request, resource, true);
+        await validate?.(fields, { operation: "create" });
         return Response.json({ data: await repository.create(fields) }, { status: 201 });
       } catch (error) {
         return handleError(error);
@@ -46,11 +55,13 @@ export function createCrudController(resource: ResourceDefinition) {
 
     async update(id: string, request: Request): Promise<Response> {
       try {
-        const fields = await parseFields(request, resource, false);
+        const fields = await parseResourceFields(request, resource, false);
         if (Object.keys(fields).length === 0) {
           throw new ApiError("Provide at least one field to update", 400);
         }
-        const row = await repository.update(parseId(id), fields);
+        const recordId = parseId(id);
+        await validate?.(fields, { operation: "update", id: recordId });
+        const row = await repository.update(recordId, fields);
         if (!row) throw new ApiError("Resource not found", 404);
         return Response.json({ data: row });
       } catch (error) {
@@ -71,7 +82,7 @@ export function createCrudController(resource: ResourceDefinition) {
   };
 }
 
-async function parseFields(
+export async function parseResourceFields(
   request: Request,
   resource: ResourceDefinition,
   isCreate: boolean,
@@ -83,6 +94,14 @@ async function parseFields(
     throw new ApiError("Request body must be valid JSON", 400);
   }
 
+  return validateResourceFields(body, resource, isCreate);
+}
+
+export function validateResourceFields(
+  body: unknown,
+  resource: ResourceDefinition,
+  isCreate: boolean,
+): DatabaseFields {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     throw new ApiError("Request body must be a JSON object", 400);
   }
@@ -189,7 +208,7 @@ function parsePageNumber(value: string | null, fallback: number, maximum: number
   return parsed;
 }
 
-function handleError(error: unknown): Response {
+export function handleError(error: unknown): Response {
   if (isPostgresError(error)) {
     if (error.code === "23505") return Response.json({ error: "A record with these values already exists" }, { status: 409 });
     if (error.code === "23503") return Response.json({ error: "Related record does not exist or is still in use" }, { status: 409 });

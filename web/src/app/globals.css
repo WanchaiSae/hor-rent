@@ -288,6 +288,7 @@ button:disabled {
 .stat-green { background: #ecfdf5; color: #059669; }
 .stat-indigo { background: #eef2ff; color: #4f46e5; }
 .stat-amber { background: #fffbeb; color: #d97706; }
+.stat-red { background: #fef2f2; color: #dc2626; }
 
 .table-card { box-shadow: 0 1px 2px rgb(15 23 42 / 3%); }
 .data-table { width: 100%; min-width: 680px; border-collapse: collapse; text-align: left; }
@@ -326,6 +327,21 @@ button:disabled {
 .notice-error { border-radius: 11px; padding: 10px 13px; font-size: 13px; }
 .notice-success { background: #ecfdf5; color: #047857; }
 .notice-error { background: #fef2f2; color: #b91c1c; }
+
+.confirm-backdrop { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; background: rgb(17 24 39 / 45%); padding: 20px; backdrop-filter: blur(3px); }
+.confirm-dialog { width: 100%; max-width: 430px; border-radius: 20px; background: #fff; padding: 25px; box-shadow: 0 18px 55px rgb(15 23 42 / 24%); animation: confirm-dialog-enter 140ms ease-out; }
+.confirm-icon { display: flex; height: 44px; width: 44px; align-items: center; justify-content: center; border-radius: 14px; background: #fef2f2; color: #dc2626; }
+.confirm-icon .material-icons-round { font-size: 23px; }
+.confirm-title { margin-top: 17px; color: #111827; font-size: 18px; font-weight: 700; }
+.confirm-description { margin-top: 7px; color: #6b7280; font-size: 13px; line-height: 1.7; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
+.confirm-cancel, .confirm-danger { min-height: 40px; border-radius: 11px; padding: 0 15px; font-size: 13px; font-weight: 700; transition: background 140ms ease; }
+.confirm-cancel { border: 1px solid #e5e7eb; background: #fff; color: #4b5563; }
+.confirm-cancel:hover:not(:disabled) { background: #f9fafb; }
+.confirm-danger { border: 1px solid #dc2626; background: #dc2626; color: #fff; }
+.confirm-danger:hover:not(:disabled) { background: #b91c1c; }
+.confirm-cancel:disabled, .confirm-danger:disabled { cursor: wait; opacity: .6; }
+@keyframes confirm-dialog-enter { from { opacity: 0; transform: translateY(5px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 @media (max-width: 767px) {
   .sidebar { position: fixed; inset: 0 auto 0 0; width: min(288px, calc(100vw - 48px)); transform: translateX(-105%); box-shadow: 0 15px 40px rgb(15 23 42 / 20%); }
