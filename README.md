@@ -101,6 +101,58 @@ PostgreSQL
 | `bun run build` | สร้างเวอร์ชันสำหรับนำไปเริ่มใช้งาน |
 | `bun run start` | เปิดเว็บจากผลลัพธ์ที่ build แล้ว |
 
+## Deploy ด้วย Supabase และ Vercel
+
+ภาพรวมคือใช้ **Supabase เป็น PostgreSQL** และใช้ **Vercel โฮสต์ Next.js** โดย Vercel เชื่อมต่อฐานข้อมูลผ่านตัวแปร `DATABASE_URL`
+
+> **ข้อควรระวังด้านความปลอดภัย:** ตอนนี้ระบบยังไม่มีหน้าเข้าสู่ระบบหรือการตรวจสอบสิทธิ์ API ที่ Deploy สู่สาธารณะจึงเปิดให้เรียกดู เพิ่ม แก้ไข และลบข้อมูลได้โดยไม่ต้องเข้าสู่ระบบ อย่าใส่ข้อมูลผู้เช่าจริงหรือข้อมูลส่วนบุคคลจนกว่าจะเพิ่มระบบยืนยันตัวตนและกำหนดสิทธิ์ให้เรียบร้อย การเปิด RLS ใน Supabase อย่างเดียวไม่ป้องกัน API ของแอปนี้ เพราะเซิร์ฟเวอร์เชื่อมต่อฐานข้อมูลโดยตรงด้วย `DATABASE_URL`
+
+### 1. สร้างฐานข้อมูล Supabase
+
+1. สร้างโปรเจกต์ที่ [supabase.com/dashboard](https://supabase.com/dashboard) และเก็บรหัสผ่านฐานข้อมูลไว้เป็นความลับ
+2. ในหน้าตั้งค่าการเชื่อมต่อของโปรเจกต์ (ปุ่ม **Connect**) คัดลอก PostgreSQL connection string สำหรับ **Transaction pooler** หากมีให้เลือก โดยใช้ค่าตามที่ Supabase แสดงให้โปรเจกต์และ region ของคุณ
+3. Connection string ต้องเชื่อมกับฐานข้อมูล `postgres` และมี SSL ตามค่าที่ Supabase ให้มา อย่าเผยแพร่ URI นี้หรือส่งขึ้น GitHub
+
+### 2. สร้างตารางใน Supabase
+
+ใช้ Bun และ dependencies ในโปรเจกต์เพื่อรัน migration กับฐานข้อมูล Supabase ก่อน Deploy:
+
+1. ที่โฟลเดอร์หลักของโปรเจกต์ เปิดไฟล์ `.env` ที่ไม่ถูก commit และตั้ง `DATABASE_URL` เป็น connection string จาก Supabase
+2. เปิด Terminal ที่โฟลเดอร์ `web/` แล้วรัน:
+
+   ```bash
+   bun install
+   bun run db:migrate
+   ```
+
+3. ตรวจ log ว่า migration ที่จำเป็นถูกรันสำเร็จ คำสั่งนี้จะสร้างตารางและบันทึกเวอร์ชันไว้ใน `schema_migrations`
+
+หากฐานข้อมูลมีข้อมูลอยู่แล้ว ให้สำรองข้อมูลก่อน และอย่าลบหรือสร้างตารางใหม่ทับข้อมูลเดิม
+
+### 3. ตั้งค่าและ Deploy บน Vercel
+
+1. นำ Git repository นี้เข้า [Vercel](https://vercel.com/) แล้วเลือก Framework Preset เป็น **Next.js**
+2. ตั้ง **Root Directory** เป็น `web` และเปิดใช้การติดตั้ง dependencies จาก lockfile ของ Bun
+3. ใน **Project Settings → Environment Variables** เพิ่ม:
+
+   | ชื่อตัวแปร | ค่า |
+   | --- | --- |
+   | `DATABASE_URL` | PostgreSQL connection string จาก Supabase โดยเลือก Transaction pooler |
+
+   ตั้งค่านี้สำหรับ **Production** และเพิ่ม **Preview** เฉพาะเมื่อยอมให้ Preview ใช้ฐานข้อมูลนั้นได้ หากต้องการแยกข้อมูลทดสอบ ให้ใช้ Supabase project หรือฐานข้อมูลแยกสำหรับ Preview
+
+4. บันทึกการตั้งค่าแล้ว Deploy จาก branch ที่ต้องการ Vercel จะติดตั้งแพ็กเกจและ build เว็บด้วย `bun run build`
+5. เมื่อ Deploy เสร็จ เปิด URL ของเว็บและตรวจ `https://<โดเมนของคุณ>/api/health` ควรตอบกลับสถานะสำเร็จและ `database: "connected"`
+
+ไม่ต้องตั้ง `POSTGRES_PASSWORD`, `PGADMIN_DEFAULT_EMAIL` หรือ `PGADMIN_DEFAULT_PASSWORD` บน Vercel เพราะระบบที่ Deploy ใช้ `DATABASE_URL` โดยตรงและไม่ใช้ pgAdmin ส่วนตัวแปร `DATABASE_URL` ต้องตั้งบน Vercel ก่อน build และห้ามใช้ prefix `NEXT_PUBLIC_`
+
+### การอัปเดตฐานข้อมูลและการ Deploy ครั้งถัดไป
+
+- เมื่อเพิ่มไฟล์ migration ใหม่ ให้สำรองฐานข้อมูลก่อน แล้วรัน `bun run db:migrate` กับฐานข้อมูล Supabase ที่ต้องการอัปเดต จากนั้นจึง Deploy โค้ดที่ใช้ schema ใหม่นั้น
+- การ push โค้ดไปยัง branch ที่เชื่อมกับ Vercel จะเริ่ม Deploy ตามการตั้งค่าของโปรเจกต์
+- Deploy เว็บไม่ได้ย้ายข้อมูลจาก PostgreSQL ในเครื่องไป Supabase โดยอัตโนมัติ หากต้องการย้ายข้อมูลเดิมให้สำรองและนำเข้าข้อมูลแยกต่างหาก
+- เก็บข้อมูลสำรองของ Supabase ไว้เสมอ และอย่า commit `.env` หรือ connection string ลง repository
+
 ## API
 
 เว็บเรียก API ภายในแอปเพื่ออ่านและจัดการข้อมูล โดยมี `GET /api/health` สำหรับตรวจสอบการเชื่อมต่อฐานข้อมูล และ API สำหรับหอพัก ห้อง ผู้เช่า สัญญา ผู้เช่าในสัญญา หมวดหมู่การเงิน รายรับ-รายจ่าย ใบแจ้งหนี้ รายการใบแจ้งหนี้ ซัพพลายเออร์ อุปกรณ์ และงานซ่อมบำรุง
